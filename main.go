@@ -88,8 +88,8 @@ Example usage:
 		//return the list of instance names
 		var instanceNames []string
 
-		for _ = range resp.Reservations {
-			for _, instance := range resp.Reservations[0].Instances {
+		for _, reservation := range resp.Reservations {
+			for _, instance := range reservation.Instances {
 				for _, tag := range instance.Tags {
 					if *tag.Key == "Name" {
 						instanceNames = append(instanceNames, *tag.Value)
