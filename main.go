@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/endpoints"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
@@ -23,15 +24,17 @@ func main() {
 
 	listCommand := flag.NewFlagSet("list", flag.ExitOnError)
 
-	if len(os.Args) <= 1 {
-		fmt.Println(
-			`Oh no - you forgot to specify what exactly to do!
+	helpMessage :=
+		`Oh no - you forgot to specify what exactly to do!
 			
 Must provide a subcommand out of the following options: list
 
 Example usage:
-	$ boxcar list web:staging
-`)
+	$ awsprey list web:staging
+`
+
+	if len(os.Args) <= 1 {
+		fmt.Println(helpMessage)
 
 		os.Exit(1)
 	}
@@ -45,18 +48,27 @@ Example usage:
 	}
 
 	if listCommand.Parsed() {
+		if len(os.Args) <= 2 {
+			// shouldn't have to do this, error handling should be at parse time
+			fmt.Println(helpMessage)
+		}
+		listArg := os.Args[2]
+
+		filterValues := strings.Split(listArg, ":")
+
 		dryRun := false
+
 		tagFilterService := "tag:service"
 		tagFilterEnvironment := "tag:environment"
 
 		serviceFilters := []ec2.Filter{
 			{
 				Name:   &tagFilterService,
-				Values: []string{"web"},
+				Values: []string{filterValues[0]},
 			},
 			{
 				Name:   &tagFilterEnvironment,
-				Values: []string{"staging"},
+				Values: []string{filterValues[1]},
 			},
 		}
 
@@ -76,11 +88,13 @@ Example usage:
 		//return the list of instance names
 		var instanceNames []string
 
-		for _, instance := range resp.Reservations[0].Instances {
-			for _, tag := range instance.Tags {
-				if *tag.Key == "Name" {
-					instanceNames = append(instanceNames, *tag.Value)
-					fmt.Println(*tag.Value)
+		for _ = range resp.Reservations {
+			for _, instance := range resp.Reservations[0].Instances {
+				for _, tag := range instance.Tags {
+					if *tag.Key == "Name" {
+						instanceNames = append(instanceNames, *tag.Value)
+						fmt.Println(*tag.Value)
+					}
 				}
 			}
 		}
