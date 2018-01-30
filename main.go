@@ -11,6 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 )
 
+// Version of the CLI
+const CLIVersion = "0.1.2"
+
 func main() {
 	cfg, err := external.LoadDefaultAWSConfig()
 
@@ -21,6 +24,8 @@ func main() {
 	cfg.Region = endpoints.UsEast1RegionID
 
 	ec2svc := ec2.New(cfg)
+
+	var versionFlag = flag.Bool("version", false, "Displays current version.")
 
 	listCommand := flag.NewFlagSet("list", flag.ExitOnError)
 
@@ -35,8 +40,14 @@ Example usage:
 
 	if len(os.Args) <= 1 {
 		fmt.Println(helpMessage)
-
 		os.Exit(1)
+	}
+
+	flag.Parse()
+
+	if *versionFlag {
+		fmt.Println(CLIVersion)
+		os.Exit(0)
 	}
 
 	switch os.Args[1] {
