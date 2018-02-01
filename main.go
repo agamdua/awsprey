@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/endpoints"
@@ -104,10 +105,14 @@ Example usage:
 				for _, tag := range instance.Tags {
 					if *tag.Key == "Name" {
 						instanceNames = append(instanceNames, *tag.Value)
-						fmt.Println(*tag.Value)
 					}
 				}
 			}
+		}
+
+		sort.Strings(instanceNames)
+		for _, instance := range instanceNames {
+			fmt.Println(instance)
 		}
 	}
 }
