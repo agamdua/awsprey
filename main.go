@@ -84,6 +84,28 @@ Example usage:
 			},
 		}
 
+		if len(os.Args) > 3 && os.Args[3] == "with" {
+			switch os.Args[4] {
+			case "tag":
+				tag := os.Args[5]
+				extraFilters := strings.Split(tag, ":")
+				key := "tag:" + extraFilters[0]
+				extraServiceFilters := ec2.Filter{
+					Name:   &key,
+					Values: []string{extraFilters[1]},
+				}
+				serviceFilters = append(serviceFilters, extraServiceFilters)
+
+			default:
+				errorMessage := fmt.Sprintf(
+					"%s is not a supported input. Choose: 'tag'.",
+					os.Args[4],
+				)
+				fmt.Println(errorMessage)
+				os.Exit(1)
+			}
+		}
+
 		input := ec2.DescribeInstancesInput{
 			DryRun:  &dryRun,
 			Filters: serviceFilters,
