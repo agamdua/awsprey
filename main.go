@@ -13,7 +13,7 @@ import (
 )
 
 // Version of the CLI
-const CLIVersion = "0.1.2"
+const CLIVersion = "0.2.0"
 
 func main() {
 	cfg, err := external.LoadDefaultAWSConfig()
