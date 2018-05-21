@@ -72,6 +72,7 @@ Example usage:
 
 		tagFilterService := "tag:service"
 		tagFilterEnvironment := "tag:environment"
+		filterRunningState := "instance-state-code"
 
 		serviceFilters := []ec2.Filter{
 			{
@@ -81,6 +82,10 @@ Example usage:
 			{
 				Name:   &tagFilterEnvironment,
 				Values: []string{filterValues[1]},
+			},
+			{
+				Name:   &filterRunningState,
+				Values: []string{"16"}, // 16: "running" state
 			},
 		}
 
