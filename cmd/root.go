@@ -39,7 +39,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Display the current version")
+	rootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Display the current version of AWSprey CLI")
 }
 
 func run(ccmd *cobra.Command, args []string) {
