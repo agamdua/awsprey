@@ -16,6 +16,13 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"sort"
+	"strings"
+
+	"github.com/aws/aws-sdk-go-v2/aws/endpoints"
+	"github.com/aws/aws-sdk-go-v2/aws/external"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
 	"github.com/spf13/cobra"
 )
@@ -24,27 +31,98 @@ import (
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List EC2 instances in the format of <service>:<environment>",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Long: `
+Info:
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+This command gives you the capability to receive a list of EC2
+instance names (as per the Name key in AWS) by specifying a
+key:value pair coorespondig to values of AWS tags:
+
+	* service
+	* environment
+
+
+For example:
+
+	$ awsprey list <service value>:<environment value>
+	$ awsprey list web:staging
+		`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("list called")
+		cfg, err := external.LoadDefaultAWSConfig()
+
+		helpHowTo := "For more details:\n\t awsprey list --help\n"
+
+		if len(args) != 1 {
+			fmt.Println(
+				"[ERROR] An argument MUST be passed to list in the form of <service name>:<environment name>")
+			fmt.Println(helpHowTo)
+			os.Exit(1)
+		}
+
+		searchString := args[0]
+
+		if !strings.Contains(searchString, ":") {
+			fmt.Println(
+				"[ERROR] Must use a colon (:) to separate the service name and environment name.")
+			fmt.Println(helpHowTo)
+			os.Exit(1)
+		}
+
+		filterValues := strings.Split(searchString, ":")
+
+		if err != nil {
+			panic(err)
+		}
+
+		cfg.Region = endpoints.UsEast1RegionID
+
+		ec2svc := ec2.New(cfg)
+		tagFilterService := "tag:service"
+		tagFilterEnvironment := "tag:environment"
+
+		serviceFilters := []ec2.Filter{
+			{
+				Name:   &tagFilterService,
+				Values: []string{filterValues[0]},
+			},
+			{
+				Name:   &tagFilterEnvironment,
+				Values: []string{filterValues[1]},
+			},
+		}
+
+		input := ec2.DescribeInstancesInput{
+			Filters: serviceFilters,
+		}
+
+		req := ec2svc.DescribeInstancesRequest(&input)
+		resp, err := req.Send()
+
+		if err != nil {
+			panic(err)
+		}
+
+		// TODO: when the whole function is refactored out from `main` we should
+		//return the list of instance names
+		var instanceNames []string
+
+		for _, reservation := range resp.Reservations {
+			for _, instance := range reservation.Instances {
+				for _, tag := range instance.Tags {
+					if *tag.Key == "Name" {
+						instanceNames = append(instanceNames, *tag.Value)
+					}
+				}
+			}
+		}
+
+		sort.Strings(instanceNames)
+		for _, instance := range instanceNames {
+			fmt.Println(instance)
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(listCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// listCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// listCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
