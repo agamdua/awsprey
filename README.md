@@ -40,3 +40,12 @@ If you have a service called `web` and want to check environment `staging`:
 ```
 $ awsprey list web:staging
 ```
+
+
+### Development
+
+Run tests with
+
+```
+make test
+```
