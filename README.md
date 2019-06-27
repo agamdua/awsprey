@@ -33,10 +33,29 @@ with `service` and `environment` tags:
 $ awsprey list <service>:<environment>
 ```
 
+If you want to filter by extra tags, you can add them as follow:
+
+```
+# Note: the comma and the lack of whitespace between
+# the extra flags is significant.
+
+$ awsprey list <service>:<environment> --with-tags "extra1:true,extra2:present"
+```
+
+
 ### Example
 
 If you have a service called `web` and want to check environment `staging`:
 
 ```
 $ awsprey list web:staging
+```
+
+
+### Development
+
+Run tests with
+
+```
+make test
 ```
