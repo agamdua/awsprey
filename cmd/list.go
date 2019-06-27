@@ -20,10 +20,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/endpoints"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/spf13/cobra"
 )
@@ -53,7 +53,7 @@ For example:
 
 func init() {
 	var WithTags []string
-	listCmd.Flags().StringSliceVarP(&WithTags, "with-tags", "t", []string{}, "lsit tags")
+	listCmd.Flags().StringSliceVarP(&WithTags, "with-tags", "t", []string{}, "awsprey list <service>:<environment> --with-tags \"extra-tag1:present,extra-tag2:true\"")
 	// listCmd.Flags().StringVar(&WithTags, "with-tags", "t", "add more tags")
 
 	rootCmd.AddCommand(listCmd)
