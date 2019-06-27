@@ -31,6 +31,14 @@ func makeTestData() *ec2.DescribeInstancesOutput {
 								Key:   aws.String("environment"),
 								Value: aws.String("staging"),
 							},
+							{
+								Key:   aws.String("extra-tag"),
+								Value: aws.String("present"),
+							},
+							{
+								Key:   aws.String("extra-tag2"),
+								Value: aws.String("present"),
+							},
 						},
 					},
 				},
@@ -51,7 +59,12 @@ func Test_filterByTag(t *testing.T) {
 		resp: makeTestData(),
 	}
 
-	actual := filterByTag(args, rs)
+	// TODO break this into table tests
+	// 1. Simple service:environment test
+	// 2. one extra tag
+	// 3. no extra tag
+	// invalid value in extra tag
+	actual := filterByTag(args, rs, []string{"extra-tag:present,extra-tag2:present"})
 
 	if !reflect.DeepEqual(actual, golden) {
 		t.Fatalf("Actual: %s, expected: %s", actual, golden)

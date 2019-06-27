@@ -20,6 +20,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/endpoints"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -51,6 +52,10 @@ For example:
 }
 
 func init() {
+	var WithTags []string
+	listCmd.Flags().StringSliceVarP(&WithTags, "with-tags", "t", []string{}, "awsprey list <service>:<environment> --with-tags \"extra-tag1:present,extra-tag2:true\"")
+	// listCmd.Flags().StringVar(&WithTags, "with-tags", "t", "add more tags")
+
 	rootCmd.AddCommand(listCmd)
 }
 
@@ -65,7 +70,7 @@ func (r RealRequestSender) SendRequest(req ec2.DescribeInstancesRequest) (*ec2.D
 	return resp, err
 }
 
-func filterByTag(args []string, rs RequestSender) []string {
+func filterByTag(args []string, rs RequestSender, withTags []string) []string {
 	cfg, err := external.LoadDefaultAWSConfig()
 
 	helpHowTo := "For more details:\n\t awsprey list --help\n"
@@ -109,6 +114,19 @@ func filterByTag(args []string, rs RequestSender) []string {
 		},
 	}
 
+	if len(withTags) > 0 {
+		for _, tag := range withTags {
+			tagFilter := strings.Split(tag, ":")
+
+			serviceFilters = append(
+				serviceFilters, ec2.Filter{
+					Name:   aws.String("tag:" + tagFilter[0]),
+					Values: []string{tagFilter[1]},
+				},
+			)
+		}
+	}
+
 	input := ec2.DescribeInstancesInput{
 		Filters: serviceFilters,
 	}
@@ -142,7 +160,13 @@ func filterByTag(args []string, rs RequestSender) []string {
 func FilterByTag(cmd *cobra.Command, args []string) {
 	rs := RealRequestSender{}
 
-	instances := filterByTag(args, rs)
+	withTags, err := cmd.Flags().GetStringSlice("with-tags")
+
+	if err != nil {
+		panic(err)
+	}
+
+	instances := filterByTag(args, rs, withTags)
 
 	for _, instance := range instances {
 		fmt.Println(instance)
